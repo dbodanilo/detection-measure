@@ -129,9 +129,32 @@ public:
         this->fnet = v1;
         this->output = v2;
     }
-
-    void solveAll(ANN g,Flower dt){
-
+    double FNET(double num)
+    {
+        return 1/(1+exp(-num));
     }
+    //função que resolve tudo
+    void solveAll(ANN g, Flower dt, int iteration)
+    {
 
+        for (int itr = 0; itr < iteration; itr++)
+        {
+            for (int i = 0; i < dt.data.size(); i++)
+            {
+                for (int j = 0; j < dt.data[i].size(); j++)
+                {
+                    this->fnet[j] = dt.data[i][j];
+                }
+
+                for (int c = 0; c < g.graph.size(); c++)
+                {
+                    list<int>::iterator it;
+                    for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
+                    {
+                        this->fnet[*it]+=g.weights[c][*it]*this->fnet[c];
+                    }
+                }
+            }
+        }
+    }
 };

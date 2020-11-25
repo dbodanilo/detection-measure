@@ -26,7 +26,7 @@ int main()
     //transforma as labels em numeros (setosa -> 100, versicolor -> 010, virginica -> 001)
     container.fillOutputLabel();
 
-    //ambaralha os dados
+    //embaralha os dados
     shuffle(container.data.begin(), container.data.end(), std::default_random_engine(seed));
     shuffle(container.label_output.begin(), container.label_output.end(), std::default_random_engine(seed));
 
