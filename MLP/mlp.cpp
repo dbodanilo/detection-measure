@@ -38,12 +38,13 @@ public:
         //adicionando ao grapo o restante dos nós
         for (int i = this->input; i < this->graph.size()-this->output; i++)
         {
-            if ((i+1) % this->processors == 0)
+            if ((i-this->input) % this->processors == 0)
                 cont = 0;
 
-            for (int j = i + this->input - cont; j < i + this->input + this->processors - cont; j++)
+            for (int j = i + this->processors- cont; j < i + this->processors - cont+this->processors; j++)
             {
-                this->graph[i].push_back(j);
+                if(j<this->graph.size())
+                    this->graph[i].push_back(j);
             }
             cont++;
         }

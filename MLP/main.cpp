@@ -6,7 +6,7 @@ using namespace std;
 
 int main(){
 
-    ANN net = ANN(4,2,5,3);
+    ANN net = ANN(4,4,4,3);
     net.buildANN();
     net.showNetworkConnections();
 
