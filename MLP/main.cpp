@@ -32,7 +32,9 @@ int main()
 
     ANN net = ANN(4, 4, 4, 3, 0.03);
     net.buildANN();
-    net.showNetworkConnections();
+    Solver s = Solver(net.graph.size());
+    s.solveAll(net,container,1);
+    // net.showNetworkConnections();
 
     return 0;
 }
