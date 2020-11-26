@@ -30,13 +30,18 @@ int main()
     shuffle(container.data.begin(), container.data.end(), std::default_random_engine(seed));
     shuffle(container.label_output.begin(), container.label_output.end(), std::default_random_engine(seed));
     //entrada/camada escondida/processadores/saida/taxa de aprendizado
-    ANN net = ANN(4, 6, 12, 3, 0.001);
+    ANN net = ANN(4, 4, 5, 3, 0.01);
     net.buildANN();
     Solver s = Solver(net.graph.size());
-    s.solveAll(net, container, 20000);
+    s.solveAll(net, container, 1);
     // net.showNetworkConnections();
 
-    vector<double> input({5.1, 3.5, 1.4, 0.2});
+    vector<double> input({6.5,3.0,5.8,2.2});
+
+    // input.push_back(5.1);
+    // input.push_back(3.5);
+    // input.push_back(1.4);
+    // input.push_back(0.2);
 
     input = s.responseFromNetwork(net, container, input);
 
