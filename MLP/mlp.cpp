@@ -12,6 +12,8 @@ public:
     vector<vector<double>> data;
     vector<string> label_string;
     vector<vector<double>> label_output;
+    vector<double> max;
+    vector<double> min;
 
     //transforma as labels em código binário para cada classe
     void fillOutputLabel()
@@ -33,6 +35,67 @@ public:
         }
     }
 };
+
+void normalize(Flower &data)
+{
+    string file_data = "iris-data.txt";
+    Flower container = Flower();
+    container.data = readFile(file_data);
+
+    vector<double> max(container.data[0].size(), -10000.0);
+    vector<double> min(container.data[0].size(), 10000.0);
+
+    for (int i = 0; i < container.data[0].size(); i++)
+    {
+        for (int j = 0; j < container.data.size(); j++)
+        {
+            if (max[i] < container.data[j][i])
+            {
+                max[i] = container.data[j][i];
+            }
+            if (min[i] > container.data[j][i])
+            {
+                min[i] = container.data[j][i];
+            }
+        }
+    }
+    for (int i = 0; i < data.data.size(); i++)
+    {
+        for (int j = 0; j < data.data[i].size(); j++)
+        {
+            data.data[i][j] = (data.data[i][j] - min[j]) / (max[j] - min[j]);
+        }
+    }
+}
+
+void normalize(vector<double> &data)
+{
+    string file_data = "iris-data.txt";
+    Flower container = Flower();
+    container.data = readFile(file_data);
+
+    vector<double> max(container.data[0].size(), -10000.0);
+    vector<double> min(container.data[0].size(), 10000.0);
+
+    for (int i = 0; i < container.data[0].size(); i++)
+    {
+        for (int j = 0; j < container.data.size(); j++)
+        {
+            if (max[i] < container.data[j][i])
+            {
+                max[i] = container.data[j][i];
+            }
+            if (min[i] > container.data[j][i])
+            {
+                min[i] = container.data[j][i];
+            }
+        }
+    }
+    for (int i = 0; i < data.size(); i++)
+    {
+        data[i] = (data[i] - min[i]) / (max[i] - min[i]);
+    }
+}
 
 class ANN
 {
@@ -207,7 +270,7 @@ public:
                 {
                     this->fnet[j] = dt.data[i][j];
                 }
-
+                
                 for (int c = 0; c < g.graph.size(); c++)
                 {
                     list<int>::iterator it;

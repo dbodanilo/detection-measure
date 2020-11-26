@@ -23,6 +23,8 @@ int main()
     container.data = readFile(file_data);
     container.label_string = readFileLabel(file_label);
 
+    normalize(container);
+
     //transforma as labels em numeros (setosa -> 100, versicolor -> 010, virginica -> 001)
     container.fillOutputLabel();
 
@@ -30,26 +32,25 @@ int main()
     shuffle(container.data.begin(), container.data.end(), std::default_random_engine(seed));
     shuffle(container.label_output.begin(), container.label_output.end(), std::default_random_engine(seed));
     //entrada/camada escondida/processadores/saida/taxa de aprendizado
-    ANN net = ANN(4, 4, 5, 3, 0.01);
+    ANN net = ANN(4, 12, 6, 3, 0.1);
     net.buildANN();
     Solver s = Solver(net.graph.size());
-    s.solveAll(net, container, 1);
+    s.solveAll(net, container, 100);
     // net.showNetworkConnections();
 
-    vector<double> input({6.5,3.0,5.8,2.2});
-
-    // input.push_back(5.1);
-    // input.push_back(3.5);
-    // input.push_back(1.4);
-    // input.push_back(0.2);
-
+    vector<double> input({4.9,3.0,1.4,0.2});
+    normalize(input);
+    
     input = s.responseFromNetwork(net, container, input);
 
+    cout << "resposta" << endl;
     for (int i = 0; i < input.size(); i++)
     {
-        cout<<input[i]<<" ";
+        cout << input[i] << " ";
     }
-    cout<<endl;
+    cout << endl;
+    
+    
 
     return 0;
 }
