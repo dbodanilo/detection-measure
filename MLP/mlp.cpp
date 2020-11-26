@@ -132,6 +132,59 @@ public:
         this->output = v2;
         this->err = v3;
     }
+
+    vector<double> responseFromNetwork(ANN g, Flower dt, vector<double> input)
+    {
+        for (int i = 0; i < this->fnet.size(); i++)
+        {
+            this->fnet[i] = 0;
+        }
+        for (int i = 0; i < input.size(); i++)
+        {
+            this->fnet[i] = input[i];
+        }
+
+        for (int c = 0; c < g.graph.size(); c++)
+        {
+            list<int>::iterator it;
+            for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
+            {
+                this->fnet[*it] += g.weights[c][*it] * this->fnet[c];
+            }
+            if (c >= g.input)
+            {
+
+                if ((c - g.input) % g.processors == 0 && c != g.graph.size() - 1)
+                {
+                    // cout<<"poha "<<this->fnet.size()<<endl;
+                    for (int y = c; y < c + g.processors; y++)
+                    {
+                        // cout<<"Aqui "<<y<<endl;
+                        if (y < this->fnet.size())
+                            this->fnet[y] = FNET(this->fnet[y]);
+                    }
+                }
+                else if (c == g.graph.size() - 2)
+                {
+
+                    for (int y = c; y < g.graph.size(); y++)
+                    {
+
+                        this->fnet[y] = FNET(this->fnet[y]);
+                    }
+                }
+            }
+        }
+
+        vector<double> aux;
+
+        for (int i = g.graph.size() - g.output; i < g.graph.size(); i++)
+        {
+            aux.push_back(this->fnet[i]);
+        }
+        return aux;
+    }
+
     double FNET(double num)
     {
         return 1 / (1 + exp(-num));
@@ -153,7 +206,6 @@ public:
                 for (int j = 0; j < dt.data[i].size(); j++)
                 {
                     this->fnet[j] = dt.data[i][j];
-                  
                 }
 
                 for (int c = 0; c < g.graph.size(); c++)
@@ -162,7 +214,6 @@ public:
                     for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
                     {
                         this->fnet[*it] += g.weights[c][*it] * this->fnet[c];
-                        
                     }
 
                     if (c >= g.input)
@@ -214,8 +265,7 @@ public:
                     list<int>::iterator it;
                     for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
                     {
-                        g.weights[c][*it]=g.n*this->err[*it]*this->fnet[*it];
-                        
+                        g.weights[c][*it] = g.n * this->err[*it] * this->fnet[*it];
                     }
                 }
             }

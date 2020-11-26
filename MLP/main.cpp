@@ -29,12 +29,22 @@ int main()
     //embaralha os dados
     shuffle(container.data.begin(), container.data.end(), std::default_random_engine(seed));
     shuffle(container.label_output.begin(), container.label_output.end(), std::default_random_engine(seed));
-
-    ANN net = ANN(4, 4, 4, 3, 0.03);
+    //entrada/camada escondida/processadores/saida/taxa de aprendizado
+    ANN net = ANN(4, 6, 12, 3, 0.001);
     net.buildANN();
     Solver s = Solver(net.graph.size());
-    s.solveAll(net,container,1);
+    s.solveAll(net, container, 20000);
     // net.showNetworkConnections();
+
+    vector<double> input({5.1, 3.5, 1.4, 0.2});
+
+    input = s.responseFromNetwork(net, container, input);
+
+    for (int i = 0; i < input.size(); i++)
+    {
+        cout<<input[i]<<" ";
+    }
+    cout<<endl;
 
     return 0;
 }
