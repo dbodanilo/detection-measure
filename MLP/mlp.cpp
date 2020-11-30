@@ -20,25 +20,52 @@ public:
     {
         for (int i = 0; i < this->label_string.size(); i++)
         {
-            if (this->label_string[i] == "Iris-setosa")
+            //se a base é iris, descomente esses if e comente o restante
+            // if (this->label_string[i] == "Iris-setosa")
+            // {
+            //     this->label_output.push_back({1, 0, 0});
+            // }
+            // else if (this->label_string[i] == "Iris-versicolor")
+            // {
+            //     this->label_output.push_back({0, 1, 0});
+            // }
+            // else if (this->label_string[i] == "Iris-virginica")
+            // {
+            //     this->label_output.push_back({0, 0, 1});
+            // }
+
+            //se a base é cancer, descomente esses if e comente o restante
+            // if (this->label_string[i] == "M")
+            // {
+            //     this->label_output.push_back({1});
+            // }
+            // else if (this->label_string[i] == "B")
+            // {
+            //     this->label_output.push_back({0});
+            // }
+
+            //se a base é a de vinho, descomente esses if e comente o restante
+            if (this->label_string[i] == "1")
             {
                 this->label_output.push_back({1, 0, 0});
             }
-            else if (this->label_string[i] == "Iris-versicolor")
+            else if (this->label_string[i] == "2")
             {
                 this->label_output.push_back({0, 1, 0});
             }
-            else if (this->label_string[i] == "Iris-virginica")
+            else if (this->label_string[i] == "3")
             {
                 this->label_output.push_back({0, 0, 1});
             }
+           
         }
     }
 };
 
-void normalize(Flower &data)
+//aqui é feita a normalização dos dados
+void normalize(Flower &data, string f)
 {
-    string file_data = "iris-data.txt";
+    string file_data = f;
     Flower container = Flower();
     container.data = readFile(file_data);
 
@@ -49,6 +76,8 @@ void normalize(Flower &data)
     {
         for (int j = 0; j < container.data.size(); j++)
         {
+            
+
             if (max[i] < container.data[j][i])
             {
                 max[i] = container.data[j][i];
@@ -63,14 +92,21 @@ void normalize(Flower &data)
     {
         for (int j = 0; j < data.data[i].size(); j++)
         {
-            data.data[i][j] = (data.data[i][j] - min[j]) / (max[j] - min[j]);
+            double num = (max[j] - min[j]);
+            
+            if(num==0){
+                num=1;    
+            }
+            
+            data.data[i][j] = (data.data[i][j] - min[j]) / num;
+            
         }
     }
 }
-
-void normalize(vector<double> &data)
+//sobrecarga da função de normalização para o dado de teste
+void normalize(vector<double> &data,string f)
 {
-    string file_data = "iris-data.txt";
+    string file_data = f;
     Flower container = Flower();
     container.data = readFile(file_data);
 
@@ -93,10 +129,17 @@ void normalize(vector<double> &data)
     }
     for (int i = 0; i < data.size(); i++)
     {
-        data[i] = (data[i] - min[i]) / (max[i] - min[i]);
+        double num = (max[i] - min[i]);
+            
+            if(num==0){
+                num=1;    
+            }
+
+            data[i] = (data[i] - min[i]) / num;
+        
     }
 }
-
+//classe que armazena e constrói a estrutura em grafo da rede neural
 class ANN
 {
 public:
@@ -116,11 +159,25 @@ public:
         this->output = output;
         this->n = n;
         vector<list<int>> aux(input + output + (hidden * processors));
-        vector<double> v1(input + output + (hidden * processors));
+        vector<double> v1(input + output + (hidden * processors), 0);
         vector<vector<double>> ax(input + output + (hidden * processors), v1);
         this->weights = ax;
         this->graph = aux;
     }
+    //aqui é feita a lógica para fazer a ligação da rede
+    //a estrutura é a seguinte
+    /*
+    
+    dado uma rede com 4 entrada, uma camada escondida com 4 processadores e dois 
+    neuronios na camada de saida, temos a seguinte ligação
+
+    0  4
+    1  5  8
+    2  6  9
+    3  7
+    
+    */
+    
     void buildANN()
     {
         int cont = 0;
@@ -152,7 +209,7 @@ public:
             cont++;
         }
     }
-
+    //esse método mostra como a rede em grafo está conectada
     void showNetworkConnections()
     {
 
@@ -179,13 +236,15 @@ public:
     }
 };
 
+//essa classe é responsável por fazer o forward e backpropagation
 class Solver
 {
 public:
-    vector<double> fnet;
-    vector<double> output;
-    vector<double> err;
+    vector<double> fnet;//saidas
+    vector<double> output;//vetor de auxilio (não foi utilizado)
+    vector<double> err;//vetor que guarda os erros de cada neuronio
 
+    //inicialização dos vetores
     Solver(int tam)
     {
         vector<double> v1(tam, 0);
@@ -195,7 +254,7 @@ public:
         this->output = v2;
         this->err = v3;
     }
-
+    //método responsável por retornar a resposta da classificação
     vector<double> responseFromNetwork(ANN g, Flower dt, vector<double> input)
     {
         for (int i = 0; i < this->fnet.size(); i++)
@@ -209,25 +268,18 @@ public:
 
         for (int c = 0; c < g.graph.size(); c++)
         {
-            list<int>::iterator it;
-            for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
-            {
-                this->fnet[*it] += g.weights[c][*it] * this->fnet[c];
-            }
             if (c >= g.input)
             {
 
-                if ((c - g.input) % g.processors == 0 && c != g.graph.size() - 1)
+                if ((c - g.input) % g.processors == 0 && c != g.graph.size() - g.output)
                 {
-                    // cout<<"poha "<<this->fnet.size()<<endl;
                     for (int y = c; y < c + g.processors; y++)
                     {
-                        // cout<<"Aqui "<<y<<endl;
                         if (y < this->fnet.size())
                             this->fnet[y] = FNET(this->fnet[y]);
                     }
                 }
-                else if (c == g.graph.size() - 2)
+                else if (c == g.graph.size() - g.output)
                 {
 
                     for (int y = c; y < g.graph.size(); y++)
@@ -236,6 +288,13 @@ public:
                         this->fnet[y] = FNET(this->fnet[y]);
                     }
                 }
+            }
+
+            list<int>::iterator it;
+            for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
+            {
+                this->fnet[*it] += g.weights[c][*it] * this->fnet[c];
+                
             }
         }
 
@@ -252,7 +311,7 @@ public:
     {
         return 1 / (1 + exp(-num));
     }
-    //função que resolve tudo
+    //função que resolve tudo (forward e back-propagation)
     void solveAll(ANN &g, Flower dt, int iteration)
     {
 
@@ -270,47 +329,50 @@ public:
                 {
                     this->fnet[j] = dt.data[i][j];
                 }
-                
+
+                //primeiro é calculado todas as saídas
                 for (int c = 0; c < g.graph.size(); c++)
                 {
+                    if (c >= g.input)
+                    {
+                        //essa lógica é responsável por verificar quando o calculo foi para a próxima
+                        //camada, ai quando foi, ele faz o fnet para as saidas
+                        if ((c - g.input) % g.processors == 0 && c != g.graph.size() - g.output)
+                        {
+                        
+                            for (int y = c; y < c + g.processors; y++)
+                            {
+
+                                if (y < this->fnet.size())
+                                {
+                                    this->fnet[y] = FNET(this->fnet[y]);
+                                }
+                            }
+                        }
+                        else if (c == g.graph.size() - g.output)
+                        {
+                            
+                            for (int y = c; y < g.graph.size(); y++)
+                            {
+                                this->fnet[y] = FNET(this->fnet[y]);
+                            }
+                        }
+                    }
+                    //for para fazer a soma dos pesos vezes a entrada
                     list<int>::iterator it;
                     for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
                     {
                         this->fnet[*it] += g.weights[c][*it] * this->fnet[c];
                     }
-
-                    if (c >= g.input)
-                    {
-
-                        if ((c - g.input) % g.processors == 0 && c != g.graph.size() - 1)
-                        {
-                            // cout<<"poha "<<this->fnet.size()<<endl;
-                            for (int y = c; y < c + g.processors; y++)
-                            {
-                                // cout<<"Aqui "<<y<<endl;
-                                if (y < this->fnet.size())
-                                    this->fnet[y] = FNET(this->fnet[y]);
-                            }
-                        }
-                        else if (c == g.graph.size() - 2)
-                        {
-
-                            for (int y = c; y < g.graph.size(); y++)
-                            {
-
-                                this->fnet[y] = FNET(this->fnet[y]);
-                            }
-                        }
-                    }
                 }
-                //erro apenas na saida
+               
+                //calcula o erro apenas na saida
                 for (int c = g.graph.size() - g.output; c < g.graph.size(); c++)
                 {
-                    this->err[c] = (fabs(dt.label_output[i][c - (g.graph.size() - g.output)] - this->fnet[c])) * this->fnet[c] * (1 - this->fnet[c]);
-                    // cout<<"Erros "<<this->err[c]<<endl;
+                    this->err[c] = (dt.label_output[i][c - (g.graph.size() - g.output)] - this->fnet[c]) * this->fnet[c] * (1 - this->fnet[c]);
                 }
 
-                //erro do restante
+                //erro do restante da rede
                 for (int c = g.graph.size() - g.output - 1; c >= g.input; c--)
                 {
                     list<int>::iterator it;
@@ -322,13 +384,13 @@ public:
                     }
                     this->err[c] = soma * this->fnet[c] * (1 - this->fnet[c]);
                 }
-
+                //aqui todos os pesos são atualizados, apenas quando todos os erros são calculados
                 for (int c = 0; c < g.graph.size() - g.output; c++)
                 {
                     list<int>::iterator it;
                     for (it = g.graph[c].begin(); it != g.graph[c].end(); it++)
                     {
-                        g.weights[c][*it] = g.n * this->err[*it] * this->fnet[*it];
+                        g.weights[c][*it] = g.n * this->err[*it] * this->fnet[c];
                     }
                 }
             }
