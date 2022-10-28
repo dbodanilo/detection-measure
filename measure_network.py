@@ -9,7 +9,7 @@ y=[]
 
 Xt=[]
 yt=[]
-f = open('all_features_noisy.json')
+f = open('all_features_low_noisy_5.json')
 base = json.load(f)
 f.close()
 
